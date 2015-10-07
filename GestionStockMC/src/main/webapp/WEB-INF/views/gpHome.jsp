@@ -33,7 +33,7 @@ border-color:red;
 							<th>Réference</th>
 							<th>Fournisseur</th>
 							<th>Prix unitaire</th>
-							<th>Stock initial</th>
+							<th>TVA</th>
 							<th></th>
 						</tr>
 					</thead>
@@ -44,7 +44,7 @@ border-color:red;
 							<td>${p.nomProduit }</td>
 							<td>${p.fournisseur.nomFournisseur}</td>
 							<td>${p.prixUnitaire }</td>
-							<td><%-- ${p.stockInitial } --%></td>
+							<td>${p.ptva} % </td>
 							<td>
 							<c:if test="${empty p.compsants}">
 								<a class="modif" data-id="${p.codeProduit}" style="cursor:pointer;">Modifier</a>
@@ -211,7 +211,6 @@ border-color:red;
 <script	src="<%=request.getContextPath()%>/resources/js/jquery.datatables.min.js"></script>
 <script	src="<%=request.getContextPath()%>/resources/js/chosen.jquery.min.js"></script>
 <script	src="<%=request.getContextPath()%>/resources/js/jquery.validate.min.js"></script>
-<script	src="<%=request.getContextPath()%>/resources/js/chosen.jquery.min.js"></script>
 <script type="text/javascript">
 jQuery(document).ready(function(){
 	jQuery('head').append('<link href=\'<%=request.getContextPath()%>/resources/css/jquery-ui.min.css\' rel=\'stylesheet\'>');

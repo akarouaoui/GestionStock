@@ -10,6 +10,7 @@ import com.elmorocco.geststock.entities.BonCommande;
 import com.elmorocco.geststock.entities.Fournisseur;
 import com.elmorocco.geststock.entities.MouvementStock;
 import com.elmorocco.geststock.entities.Produit;
+import com.elmorocco.geststock.entities.Stock;
 
 
 @Transactional
@@ -60,6 +61,21 @@ public class GSServiceImpl implements IGSService {
 	@Override
 	public List<Fournisseur> getAllFournisseurs() {
 		return dao.getAllFournisseurs();
+	}
+
+	@Override
+	public Long getLatestBCID() {
+		return dao.getLatestBCID();
+	}
+
+	@Override
+	public void removeBC(Long idCommande) {
+		dao.removeBC(idCommande);
+	}
+
+	@Override
+	public void updateBC(BonCommande bc) {
+		dao.updateBC(bc);
 	}
 
 }

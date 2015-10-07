@@ -120,4 +120,34 @@ public class GPDaoImpl implements IGPDao{
 		q.executeUpdate();
 	}
 
+	@Override
+	public List<Stock_Produit> getAllSPByStock(Long codeStock) {
+		Query q=em.createQuery("Select sp from Stock_Produit sp where sp.stock.codeStock=:x");
+		q.setParameter("x", codeStock);
+		return q.getResultList();
+	}
+
+	@Override
+	public Stock getStock(Long codeStock) {
+		Query q=em.createQuery("Select s from Stock s where s.codeStock=:x");
+		q.setParameter("x", codeStock);
+		return (Stock) DataAccessUtils.singleResult(q.getResultList());
+	}
+
+	@Override
+	public List<Famille> getFamillesByFournisseur(Long codeFournisseur) {
+		Query q=em.createQuery("Select f from Famille f where f.codeFamille in (Select p.famille.codeFamille from Produit p where p.fournisseur.codeFournisseur=:x) ");
+		q.setParameter("x", codeFournisseur);
+		return q.getResultList();
+	}
+
+	@Override
+	public List<Produit> getProdsByFamilleAndFournisseur(Long codeFournisseur, Long codeFamille) {
+		Query q=em.createQuery("Select p from Produit p where p.fournisseur.codeFournisseur=:x and p.famille.codeFamille=:y");
+		q.setParameter("x", codeFournisseur);
+		q.setParameter("y", codeFamille);
+		return q.getResultList();
+	}
+
+
 }

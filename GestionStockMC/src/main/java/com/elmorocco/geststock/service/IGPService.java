@@ -20,11 +20,17 @@ public interface IGPService {
 	public List<Fournisseur> getFournisseurs();
 	
 	public List<Stock> getAllStocks();
+	public Stock getStock(Long codeStock);
 	public void saveSP(Stock_Produit sp);
 	public void deleteSpByProduit(Long codeProduit);
 	public Stock_Produit getLatestSP(Long codeProduit,Long codeStock);
+	public List<Stock_Produit> getStatProdByStock(Long codeStock);
+	
 	
 	public List<Composition> getCompositionProduit(Long idProduit);
 	public void saveComposition(Composition c);
 	public void clearCompositionByProduit(Long idProduit);
+	
+	public List<Famille> getFamillesByFournisseur(Long codeFournisseur);
+	public List<Produit> getProdsByFamilleAndFournisseur(Long codeFournisseur,Long codeFamille);
 }

@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.AutoPopulatingList;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,6 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.elmorocco.geststock.entities.Article;
 import com.elmorocco.geststock.entities.BonCommande;
+import com.elmorocco.geststock.entities.Famille;
 import com.elmorocco.geststock.entities.Fournisseur;
 import com.elmorocco.geststock.entities.MouvementStock;
 import com.elmorocco.geststock.entities.Produit;
@@ -35,6 +37,7 @@ import com.elmorocco.geststock.entities.Stock;
 import com.elmorocco.geststock.entities.Stock_Produit;
 import com.elmorocco.geststock.entities.Type;
 import com.elmorocco.geststock.models.BonCommandeFormModel;
+import com.elmorocco.geststock.service.EmailAPI;
 import com.elmorocco.geststock.service.IGPService;
 import com.elmorocco.geststock.service.IGSService;
 
@@ -52,6 +55,8 @@ public class GestStockController {
 	@Autowired
 	private IGPService serviceP;
 	
+	@Autowired
+	private EmailAPI api;
 	
 	
 	@RequestMapping(value="/")
@@ -80,18 +85,45 @@ public class GestStockController {
 			Stock_Produit sp=new Stock_Produit();
 			sp.setStock(s);
 			sp.setProduit(p);
-			sp.setDate(sdf.parse(dateM));
 			Stock_Produit ancien=serviceP.getLatestSP(idProduit, stock);
+			Date dateMouvement=sdf.parse(dateM);
+			if(ancien.getDate().compareTo(dateMouvement)==0){
+				Calendar cal=Calendar.getInstance();
+				cal.setTime(dateMouvement);
+				cal.add(Calendar.MINUTE, 1);
+				sp.setDate(cal.getTime());
+			}else if(ancien.getDate().compareTo(dateMouvement)>0){
+				Calendar cal=Calendar.getInstance();
+				cal.setTime(ancien.getDate());
+				cal.add(Calendar.MINUTE, 1);
+				sp.setDate(cal.getTime());
+			}else{
+				sp.setDate(dateMouvement);
+			}
 			if(pTest.getSortie_dose() && (stock==2L || stock==3L )){
 				sp.setQuantite(ancien.getQuantite()+(quantite*pTest.getRatioB_D()));
+			}else{
+				sp.setQuantite(ancien.getQuantite()+(quantite));
 			}
 			Stock_Produit spOrigine=new Stock_Produit();
 			spOrigine.setProduit(p);
 			Stock ss=new Stock();
 			ss.setCodeStock(1L);
 			spOrigine.setStock(ss);
-			spOrigine.setDate(sdf.parse(dateM));
 			Stock_Produit ancienOrigine=serviceP.getLatestSP(idProduit,1L);
+			if(ancienOrigine.getDate().compareTo(dateMouvement)==0){
+				Calendar cal=Calendar.getInstance();
+				cal.setTime(dateMouvement);
+				cal.add(Calendar.MINUTE, 1);
+				spOrigine.setDate(cal.getTime());
+			}else if(ancienOrigine.getDate().compareTo(dateMouvement)>0){
+				Calendar cal=Calendar.getInstance();
+				cal.setTime(ancienOrigine.getDate());
+				cal.add(Calendar.MINUTE, 1);
+				spOrigine.setDate(cal.getTime());
+			}else{
+				spOrigine.setDate(dateMouvement);
+			}
 			spOrigine.setQuantite(ancienOrigine.getQuantite()-quantite);
 			serviceP.saveSP(spOrigine);
 			serviceP.saveSP(sp);
@@ -102,13 +134,23 @@ public class GestStockController {
 			ss.setCodeStock(1L);
 			sp.setStock(ss);
 			sp.setProduit(p);
-			sp.setDate(sdf.parse(dateM));
 			Stock_Produit ancien=serviceP.getLatestSP(idProduit, 1L);
+			Date dateMouvement=sdf.parse(dateM);
+			if(ancien.getDate().compareTo(dateMouvement)==0){
+				Calendar cal=Calendar.getInstance();
+				cal.setTime(dateMouvement);
+				cal.add(Calendar.MINUTE, 1);
+				sp.setDate(cal.getTime());
+			}else{
+				sp.setDate(dateMouvement);
+			}
 			sp.setQuantite(ancien.getQuantite()+quantite);
 			serviceP.saveSP(sp);
 			m.setTypeMouvement(Type.IN);
+			stock=1L;
 		}
 		m.setProduit(p);
+		m.setDestination(serviceP.getStock(stock).getIntitStock());
 		service.addMouvement(m);
 		return "redirect:/GestionStock/";
 	}
@@ -152,7 +194,11 @@ public class GestStockController {
 		for(MouvementStock m : dbres){
 			List<Object> out=new ArrayList<>();
 			out.add(sdf.format(m.getDateMouvement()));
-			out.add(m.getTypeMouvement().toString());
+			if(m.getTypeMouvement().toString().equalsIgnoreCase("OUT")){
+				out.add("Sortie("+m.getDestination()+")");
+			}else{
+				out.add("Entrée");
+			}
 			out.add(m.getProduit().getNomProduit());
 			out.add(m.getProduit().getFamille().getNomFamille());
 			out.add(m.getQuantite());
@@ -192,7 +238,21 @@ public class GestStockController {
 		f.setCodeFournisseur(bc.getIdFournisseur());
 		BonCommande b=new BonCommande("", new Date(), "new",f);
 		//Set num serie de la commande
-		
+		String id=String.valueOf(service.getLatestBCID());
+		if(id.equalsIgnoreCase("null")){
+			id="1";
+		}
+		String sn="";
+		if(id.length()==1){
+			sn="000"+id;
+		}else if(id.length()==2){
+			sn="00"+id;
+		}else if(id.length()==3){
+			sn="0"+id;
+		}
+		Calendar cal=Calendar.getInstance();
+		sn+="/"+String.valueOf(cal.get(Calendar.MONTH)+1)+String.valueOf(cal.get(Calendar.YEAR));
+		b.setNumCommande(sn);
 		List<Article> articles=bc.getArticles();
 		for(Article a : articles){
 			Produit p=serviceP.getProduitByID(a.getIdProduit());
@@ -200,7 +260,10 @@ public class GestStockController {
 			a.setCommande(b);
 		}
 		b.setArticles(articles);
+		b.setStatCommande("Issue");
 		service.addBonCommande(b);
+		//Send mail : 
+		//api.sendEmail("a.karouaoui@outlook.com","ayoub.karouaoui@gmail.com", "test","SENT FROM WITHIN MY APP");
 		return "redirect:/GestionStock/BonCommande";
 	}
 	@RequestMapping(value="/BonCommande/getBC")
@@ -216,6 +279,79 @@ public class GestStockController {
 		modelAndView = new ModelAndView("pdfBon", parameterMap);
 		return modelAndView;
 	}
+	
+	@RequestMapping(value="/BonCommande/supprimer",method=RequestMethod.POST)
+	public String deleteBC(@RequestParam(value="idCommande",required=true) Long idCommande ){
+		service.removeBC(idCommande);
+		return "bcForm";
+	}
+	@RequestMapping(value="/BonCommande/get",method=RequestMethod.GET)
+	public @ResponseBody BonCommande getBC(@RequestParam(value="idCommande",required=true) Long idCommande ){
+		return service.getBC(idCommande);
+	}
+	@RequestMapping(value="/BonCommande/validate",method=RequestMethod.POST)
+	@ResponseStatus(value = HttpStatus.OK)
+	public void validateBC(@RequestParam(value="idCommande",required=true) Long idCommande ) throws ParseException{
+		BonCommande bc=service.getBC(idCommande);
+		SimpleDateFormat format=new SimpleDateFormat("dd/MM/yyyy");
+		for(Article a : bc.getArticles()){
+			saveMouvement(a.getIdProduit(),format.format(new Date()),a.getQuantite(),"IN",1L);
+		}
+		bc.setStatCommande("Reçue");
+		service.updateBC(bc);
+	}
+	@RequestMapping(value="/BonCommande/change",method=RequestMethod.POST)
+	@ResponseStatus(value = HttpStatus.OK)
+	public void validateBCChange(@RequestParam(value="idCommande",required=true) Long idCommande,
+			@RequestParam("id[]") List<Long> ids,@RequestParam("qtes[]") List<Float> qtes) throws ParseException{
+		BonCommande bc=service.getBC(idCommande);
+		SimpleDateFormat format=new SimpleDateFormat("dd/MM/yyyy");
+		for(Article a : bc.getArticles()){
+			for(Long id:ids){
+				if(a.getIdArticle()==id){
+					a.setQuantite(qtes.get(ids.indexOf(id)));
+				}
+			}
+			saveMouvement(a.getIdProduit(),format.format(new Date()),a.getQuantite(),"IN",1L);
+		}
+		bc.setStatCommande("Reçue(Avec Rectification)");
+		service.updateBC(bc);
+	}
+	
+	@RequestMapping(value="/EtatStock/")
+	public String getStatusHome(Model model){
+		model.addAttribute("stocks",serviceP.getAllStocks());
+		return "etatStock";
+	}
+	
+	@RequestMapping(value="/getFamilleByFournisseurs")
+	public @ResponseBody List<Famille> getFamillesByFournisseurs(@RequestParam("codeFournisseur") Long codeFournisseur){
+		return serviceP.getFamillesByFournisseur(codeFournisseur);
+	}
+	
+	@RequestMapping(value="/getProdsByFamFour")
+	public @ResponseBody List<Produit> getProdsByFamilleAndFournisseurs(@RequestParam("codeFournisseur") Long codeFournisseur,
+			@RequestParam("codeFamille") Long codeFamille){
+		return serviceP.getProdsByFamilleAndFournisseur(codeFournisseur, codeFamille);
+	}
+	
+	
+	@RequestMapping(value="/getSPByStock",method=RequestMethod.GET)
+	public @ResponseBody HashMap<String, List<List<Object>>> getSPByStock(@RequestParam Long idStock){
+		HashMap<String,List<List<Object>>> finalout=new HashMap<>();
+		List<Stock_Produit> dbres=serviceP.getStatProdByStock(idStock);
+		List<List<Object>> outs=new ArrayList<List<Object>>();
+		for(Stock_Produit sp : dbres){
+			List<Object> out=new ArrayList<>();
+			out.add(sp.getProduit().getFamille().getNomFamille());
+			out.add(sp.getProduit().getNomProduit());
+			out.add(sp.getQuantite());
+			outs.add(out);
+		}
+		finalout.put("aaData", outs);
+		return finalout;
+	}
+	
 	@RequestMapping(value="/historique/getExtraction")
 	public ModelAndView  getExctractionHebdo(ModelAndView modelAndView,@RequestParam String dfs) throws ParseException{
 		SimpleDateFormat sdf=new SimpleDateFormat("dd/MM/yyyy");

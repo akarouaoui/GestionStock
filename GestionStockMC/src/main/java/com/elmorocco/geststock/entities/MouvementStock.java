@@ -30,6 +30,7 @@ public class MouvementStock implements Serializable{
 	@JoinColumn(name="codeProduit")
 	private Produit produit;
 	private Float quantite;
+	private String destination;
 	
 	public Long getIdMouvement() {
 		return idMouvement;
@@ -72,6 +73,12 @@ public class MouvementStock implements Serializable{
 	}
 	public MouvementStock() {
 		super();
+	}
+	public String getDestination() {
+		return destination;
+	}
+	public void setDestination(String destination) {
+		this.destination = destination;
 	}
 	
 	

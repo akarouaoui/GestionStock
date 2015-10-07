@@ -102,7 +102,13 @@
       <h5 class="sidebartitle">Navigation</h5>
       <ul class="nav nav-pills nav-stacked nav-bracket">
         <li id="lihome"><a href="<%=request.getContextPath()%>" ><i class="fa fa-home"></i> <span>Accueil</span></a></li>
-        <li id="ligp"><a href="<%=request.getContextPath()%>/GestionProds/Liste" ><i class="glyphicon glyphicon-list"></i> <span>Gestion de produits</span></a></li>
+        <li id="ligp" class=""><a href="<%=request.getContextPath()%>/GestionProds/Liste" ><i class="glyphicon glyphicon-list"></i> <span>Gestion de produits</span></a>
+        	<ul class="children">
+        		<li><a href="">Gestion des Familles</a></li>
+        		<li><a href="">Gestion des fournisseurs</a></li>
+        	</ul>
+        
+        </li>
         <li id="ligs"><a href="<%=request.getContextPath()%>/GestionStock/" ><i class="fa fa-home"></i> <span>Gestion de stock</span></a></li>
       </ul>
       <div class="infosummary">

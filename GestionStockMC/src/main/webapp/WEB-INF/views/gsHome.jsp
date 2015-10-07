@@ -6,10 +6,13 @@
     		<div class="panel panel-default panel-dark panel-alt">
     			<div class="panel-heading"><h4 class="panel-title">Opérations</h4></div>
     			<div class="panel-body">
+    				<a class="btn btn-primary btn-block" href="<%=request.getContextPath()%>/GestionStock/EtatStock/">Etat des stocks</a>
     				<a class="btn btn-primary btn-block" href="<%=request.getContextPath()%>/GestionStock/historique">Consulter l'historique complet</a>
     				<button class="btn btn-primary btn-block" id="amClick">Ajouter mouvement</button>
+    				<a class="btn btn-primary btn-block" href="<%=request.getContextPath()%>/GestionStock/Ventes">Saisie des ventes</a>
     				<a class="btn btn-primary btn-block" href="<%=request.getContextPath()%>/GestionStock/BonCommande">Bons de commande</a>
-    				<button class="btn btn-primary btn-block">Action 1</button>
+    				
+    				
     			</div>
     		</div>
     	</div>
@@ -37,7 +40,7 @@
 							<td><fmt:formatDate pattern="dd/MM/yyyy" value="${i.dateMouvement}"/></td>
 							<td>
 								<c:choose>
-									<c:when test="${i.typeMouvement=='OUT' }">Sortie</c:when>
+									<c:when test="${i.typeMouvement=='OUT' }">Sortie (${i.destination})</c:when>
 									<c:otherwise>Entrée</c:otherwise>
 								</c:choose>
 								
@@ -45,7 +48,9 @@
 							</td>
 							<td>${i.produit.nomProduit}</td>
 							<td>${i.produit.famille.nomFamille }</td>
-							<td>${i.quantite }</td>
+							<td>
+							<fmt:formatNumber maxFractionDigits="0" type="number" value="${i.quantite}"/>
+							</td>
 						</tr>
 					</c:forEach>
 					</tbody>

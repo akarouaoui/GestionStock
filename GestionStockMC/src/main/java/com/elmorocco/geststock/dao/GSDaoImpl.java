@@ -11,6 +11,7 @@ import org.springframework.dao.support.DataAccessUtils;
 import com.elmorocco.geststock.entities.BonCommande;
 import com.elmorocco.geststock.entities.Fournisseur;
 import com.elmorocco.geststock.entities.MouvementStock;
+import com.elmorocco.geststock.entities.Stock;
 
 public class GSDaoImpl implements IGSDao{
 
@@ -64,5 +65,27 @@ public class GSDaoImpl implements IGSDao{
 		Query q=em.createQuery("select f from Fournisseur f");
 		return q.getResultList();
 	}
+
+	@Override
+	public Long getLatestBCID() {
+		Query q=em.createQuery("select max(b.idCommande) from BonCommande b");
+		return (Long)DataAccessUtils.singleResult(q.getResultList());
+	}
+
+	@Override
+	public void removeBC(Long idCommande) {
+		BonCommande bc=getBC(idCommande);
+		if(bc==null){
+			throw new RuntimeException("Bon de commande introuvable");
+		}
+		em.remove(bc);
+	}
+
+	@Override
+	public void updateBC(BonCommande bc) {
+		em.merge(bc);
+		
+	}
+
 	
 }

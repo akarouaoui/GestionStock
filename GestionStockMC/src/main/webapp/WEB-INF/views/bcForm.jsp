@@ -50,7 +50,7 @@ border-color:red;
          	
          	</table>
          	</div>
-         	<input type="submit" value="valider" class="btn btn-primary" id="sub"/>
+         	<input type="submit" value="Valider" class="btn btn-primary" id="sub"/>
          	</f:form>
         </div>
         </div>
@@ -66,6 +66,7 @@ border-color:red;
 jQuery(document).ready(function(){
 	jQuery('#ligs').addClass('active');
 	var index=0;
+	var familles=[];
 	jQuery('#add').click(function(e){
 		e.preventDefault();
 		
@@ -76,12 +77,30 @@ jQuery(document).ready(function(){
 			 appendTr();	
 			}
 		}
-		
-		
-		
-		
 	});
-	
+	var oldFValue;
+	jQuery('#myForm').find("select[name='idFournisseur']").change(function(){
+		var length=jQuery('#theTable > tbody').find('tr').length;
+		if(length!=0){
+			if(confirm("Ce changement entraine la reinitialisation de votre Commande\nVoulez-vouz continuez? ")){
+				jQuery('#theTable > tbody').empty();
+			}
+			else{
+				jQuery(this).val(oldFValue);
+			}
+		}
+		jQuery.ajax({
+			url:'<%=request.getContextPath()%>/GestionStock/getFamilleByFournisseurs',
+			data:'codeFournisseur='+jQuery('#myForm').find("select[name='idFournisseur']").val(),
+			success:function(data){
+				familles=[];
+				jQuery.each(data,function(index,value){
+					familles.push(value);
+				})
+			}
+		});
+		oldFValue=jQuery(this).val();
+	});
 	function appendTr(){
 		var x=jQuery('#theTable').append(
 				"<tr>"+
@@ -111,23 +130,23 @@ jQuery(document).ready(function(){
 	
 	//addProds(jQuery('#tha'));
 	function addProds(select){
-		jQuery.ajax({
-			url:'<%=request.getContextPath()%>/GestionProds/getAllFamilles',
-			success:function(data){
-				jQuery.each(data,function(index,value){
-					jQuery(select).append('<option value='+value.codeFamille+'>'+value.nomFamille+'</option>');
-				});
-				
-				
-			}
+		
+		jQuery.each(familles,function(index,value){
+			jQuery(select).append('<option value='+value.codeFamille+'>'+value.nomFamille+'</option>');
 		});
+				
 		jQuery(select).change(function(){
 			var x=jQuery(this).closest('td').next('td').find('select');
 			var val=jQuery(this).val();
 			jQuery.ajax({
-				url:'<%=request.getContextPath()%>/GestionProds/getProdsByFamille',
-				data:'famille='+val,
+				url:'<%=request.getContextPath()%>/GestionStock/getProdsByFamFour',
+				data:{
+					codeFamille:jQuery(select).val(),
+					codeFournisseur:jQuery('#myForm').find("select[name='idFournisseur']").val()
+				},
 				success:function(data){
+					jQuery(x).empty();
+					jQuery(x).append('<option value="0">--Faites un choix--</option>');
 					jQuery.each(data,function(index,value){
 						jQuery(x).append('<option value='+value.codeProduit+'>'+value.nomProduit+'</option>');
 					});

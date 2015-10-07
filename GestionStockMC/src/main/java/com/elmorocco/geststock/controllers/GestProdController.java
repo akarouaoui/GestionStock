@@ -1,5 +1,6 @@
 package com.elmorocco.geststock.controllers;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -75,10 +76,20 @@ public class GestProdController {
 		List<Stock> stocks=service.getAllStocks();
 		for(Stock s : stocks){
 			Stock_Produit sp=new Stock_Produit();
-			sp.setDate(new Date());
+			Calendar cal = Calendar.getInstance();
+			cal.set(Calendar.HOUR_OF_DAY,0);
+			cal.set(Calendar.MINUTE,0);
+			cal.set(Calendar.SECOND,0);
+			cal.set(Calendar.MILLISECOND,0);
+			sp.setDate(cal.getTime());
 			sp.setProduit(p);
 			sp.setStock(s);
-			sp.setQuantite(stockInitial);
+			if(s.getCodeStock()==1L){
+				sp.setQuantite(stockInitial);
+			}else{
+				sp.setQuantite(0f);
+			}
+			
 			service.saveSP(sp);
 		}
 		return "redirect:/GestionProds/Liste";
